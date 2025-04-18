@@ -10,7 +10,6 @@ eventManager.subscribe(EVENTS.USER_NAME, (name) => {
 
 //evento disparado por firebase.js
 eventManager.subscribe(EVENTS.USER, (data) => {
-  console.table(data)
   eventManager.publish(EVENTS.PLAYER_CONFIG, data)
 })
 

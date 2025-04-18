@@ -62,8 +62,8 @@ eventManager.subscribe(EVENTS.DELETE, (nomeEvento) => {
 
 eventManager.subscribe(EVENTS.CLICKED, async (data) => {
   try {
-    // await findGameId(player.id)
-
+    currentMatch = await findGameId(player.id)
+    console.log(currentMatch)
     if (currentMatch) {
       const currentMatchRef = child(gamesRef, currentMatch)
       // const currentMatchRef = child(gamesRef + '/game', currentMatch) //somente para testes
@@ -136,12 +136,12 @@ async function handleJoinGame(gamesRef, player) {
    *       2 jogadores -> cria nova partida startNewGame(gamesRef, player)
    *
    */
-
   const gamesList = await getMatches(gamesRef)
+  console.table(`🛠️[firebase (140)] - ${gamesList}`)
   if (gamesList) {
     try {
       let matchAvaliableId = findAvaliableGame(gamesList)
-
+      currentMatch = matchAvaliableId
       if (matchAvaliableId) {
         //verificar value do player conectado à partida
         // const matchRef = child(gamesRef, 'game/' + matchAvaliableId) //Somente para testes
@@ -208,7 +208,7 @@ async function startNewGame(gamesRef, player) {
       uid: player.uid,
       value: 'X'
     })
-    console.log('✅[firebase] Jogador criado com sucess!')
+    // console.log('✅[firebase] Jogador criado com sucess!')
   } catch (error) {
     console.error('⛔[ firebase] Erro ao iniciar nova partida: ', error.message)
     throw error
@@ -286,7 +286,7 @@ async function joinGame(matchRef, player) {
 
 function gerateId() {
   let id = Math.floor(Math.random() * 1000000000000000).toString(36)
-  console.log(`✅ [ firebase ] id gerado para o player: ', ${id}`)
+  // console.log(`✅ [ firebase ] id gerado para o player: ', ${id}`)
   return id
 }
 
@@ -296,10 +296,11 @@ function gerateId() {
  * @returns {Object} matches
  */
 async function getMatches(ref) {
-  // let refPath = child(gamesRef, 'game') //somente para testes
-
+  //debug only let refPath = child(gamesRef, 'game') //somente para testes
+  //Debug only console.log(`🛠️[firebase (300)] ${ref.key}`)
   try {
     const snapshot = await get(ref)
+    //debug only console.log(`🛠️[firebase (303)] ${snapshot}`)
     const matches = snapshot.val()
     if (matches) {
       return matches
