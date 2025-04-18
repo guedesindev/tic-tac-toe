@@ -1,8 +1,3 @@
-<style>
-  .list{list-style-type: none; line-height: .9rem}
-  .item{list-style-type: '| - '}
-</style>
-
 ## TIC TAC TOE
 
 # O famoso Jogo da Velha
