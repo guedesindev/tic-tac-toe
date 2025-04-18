@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="./public/imgs/tic-tac-toe.png" type="image/x-icon">
+  <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8973293312122964"
+    crossorigin="anonymous"></script> -->
+  <link rel="stylesheet" type="text/css" href="./public/css/index.css">
+  <link rel="stylesheet" type="text/css" href="./public/css/game.css">
+  <title>Tic-Tac-Toe</title>
+</head>
+
+<body>
+  <div class="container" id="container">
+    <p id="hero">Olá seja bem-vindo ao Tic-Tac-Toe!</p>
+    <div class="main-btn">
+      <span id="main-btn-text">Play Online</span>
+    </div>
+  </div>
+
+  <!-- Modal para captar nome do usuário-->
+  <div id="modal-enter">
+    <form id="form">
+      <div>
+        <label for="ipt-name" id="lbl-name">Enter your name</label>
+        <input id="ipt-name" type="text" />
+      </div>
+      <button id="btn-ok">OK</button>
+    </form>
+    <img src="./public/imgs/WFH.gif" id="loading" alt="garoto esperando" />
+  </div>
+  <!-- Fim da MOdal-->
+
+  <!-- Game -->
+  <div id="game">
+    <div id="players">
+      <span class="span-players" id="user">Player1</span>
+      <span class="span-players" id="opponent">Player2</span>
+    </div>
+    <div id="cabecalho">Tic Tac Toe</div>
+    <p id="vez">Vez do <span id="player-vez"></span></p>
+    <div id="cabecalho-nome-jogo"></div>
+    <div id="tabuleiro"></div>
+    <div id="footer">Você está jogando contra <span id="opponentValue"></span></div>
+  </div>
+  <!-- Fim Game -->
+
+  <!-- Notificações -->
+  <div id="notificacao" class="notificacao hidden"></div>
+  <!-- Fim de Notificações -->
+  <!-- <div class="ads"></div> -->
+
+  <script type="module" src="./public/js/firebaseConfig.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js"></script>
+  <script type="module" defer src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js"></script>
+  <script type="module" defer src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js"></script>
+  <script type="module" defer src="./public/js/index.js"></script>
+  <script type="module" defer src="./public/js/client.js"></script>
+  <script type="module" defer src="./public/js/firebase.js"></script>
+</body>
+
+</html>
