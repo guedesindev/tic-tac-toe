@@ -137,15 +137,16 @@ async function handleJoinGame(gamesRef, player) {
    *
    */
   const gamesList = await getMatches(gamesRef)
-  console.table(`🛠️[firebase (140)] - ${gamesList}`)
   if (gamesList) {
     try {
       let matchAvaliableId = findAvaliableGame(gamesList)
       currentMatch = matchAvaliableId
+      console.log(`[🛠️ firebase 145] - ${currentMatch}`)
       if (matchAvaliableId) {
         //verificar value do player conectado à partida
         // const matchRef = child(gamesRef, 'game/' + matchAvaliableId) //Somente para testes
         const matchRef = child(gamesRef, matchAvaliableId)
+
         currentMatch = matchAvaliableId
         await putPlayer(matchRef, player)
         // console.log()
@@ -236,7 +237,7 @@ async function putPlayer(matchRef, player) {
       const gamers = snapshot.val()
       if (gamers) {
         const eventData = {
-          type: 'joined-player',
+          type: EVENTS.PLAYER_JOINED,
           details: {
             resultado: 'sucesso',
             currentPlayer: gamers.currentPlayer,
@@ -264,13 +265,15 @@ async function joinGame(matchRef, player) {
   //adiciona o jogador ao nó de jogadores da partida
   let playersRef = child(matchRef, 'players')
   let newPlayerRef = child(playersRef, 'player2')
-
   //define os dados do novo jogador
   try {
     await set(newPlayerRef, player)
 
-    await update(matchRef, { isFull: true })
-
+    try {
+      await update(matchRef, { isFull: true })
+    } catch (error) {
+      console.error('Erro ao alterar o valor de isFull: ', error.message)
+    }
     let eventData = {
       type: EVENTS.NOTIFICATIONS,
       details: {
@@ -278,9 +281,20 @@ async function joinGame(matchRef, player) {
         msg: `${player.name} entrou na partida!`
       }
     }
-    await persistirEventos(matchRef, eventData)
+
+    try {
+      await persistirEventos(matchRef, eventData)
+    } catch (error) {
+      console.error(
+        `Erro ao adicionar evento de sucesso do ${player.name} entrando na partida`
+      )
+    }
   } catch (error) {
-    console.error('⛔ Erro ao adicionar player2 na partida: ', matchRef.key)
+    console.error(
+      '⛔ Erro ao adicionar player2 na partida: ',
+      matchRef.key,
+      error.message
+    )
   }
 }
 
