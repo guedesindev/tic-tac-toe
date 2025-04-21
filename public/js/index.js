@@ -49,7 +49,7 @@ buttonOk.addEventListener(EVENTS.CLICK, (e) => {
 
 //inscrever-se para o evento 'iniciar-jogo'
 eventManager.subscribe(EVENTS.START_GAME, (data) => {
-  console.log(`ℹ️[ INDEX ] ${EVENTS.START_GAME} ${data}`)
+  console.log(`ℹ️[ INDEX ] ${EVENTS.START_GAME}`,data)
   /**
    * Estrutura de dados do jogo
    * currentPlayer: 'X' || 'O'
