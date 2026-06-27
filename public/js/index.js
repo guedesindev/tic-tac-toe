@@ -42,14 +42,12 @@ buttonOk.addEventListener(EVENTS.CLICK, (e) => {
     loading.style.display = 'block'
     loading.style.height = '100%'
     loading.style.width = '50%'
-    // console.clear()
     eventManager.publish(EVENTS.USER_NAME, namePlayer)
   }
 })
 
 //inscrever-se para o evento 'iniciar-jogo'
 eventManager.subscribe(EVENTS.START_GAME, (data) => {
-  console.log(`ℹ️[ INDEX ] ${EVENTS.START_GAME}`,data)
   /**
    * Estrutura de dados do jogo
    * currentPlayer: 'X' || 'O'
@@ -63,7 +61,7 @@ eventManager.subscribe(EVENTS.START_GAME, (data) => {
     player1: gameAtual.players.player1,
     player2: gameAtual.players.player2
   }
-  currentPlayer = gameAtual.players.player1.value
+  currentPlayer = gameAtual.currentPlayer
   let user = {}
   let opponent = {}
 
@@ -87,8 +85,6 @@ eventManager.subscribe(EVENTS.START_GAME, (data) => {
   document.getElementById('opponentValue').innerText = opponent.value
 
   document.getElementById('player-vez').innerText = currentPlayer
-
-  // console.clear() //limpar console após entrada no tabuleiro.
 })
 
 /**
@@ -131,26 +127,24 @@ eventManager.subscribe(EVENTS.NOTIFICATIONS, (data) => {
 
 eventManager.subscribe(EVENTS.PLAY, (data) => {
   if (data) {
-    console.debug(`ℹ️ [ INDEX ] ${EVENTS.PLAY}: , ${data}`)
     let dados = data.data
-    let id = normalizeId(dados.btnId)
-    let moveData = {
-      x: id[0],
-      y: id[1],
-      curPlayer: dados.value
+    let player = Object.values(gameAtualizado).find(p => p.name == namePlayer)
+
+
+    if (player.value !== dados.value) {
+      updateBoardUI(dados.btnId, dados.value)
+      currentPlayer = toogleTurnPlayer(currentPlayer)
+      eventManager.publish(EVENTS.TURN_PLAYER, currentPlayer)
     }
-    game.makeMove(moveData)
-    // updateBoard(game.board)
-    updateBoardUI(dados.btnId, dados.value)
   }
 })
 
-eventManager.subscribe(EVENTS.NEXT_PLAYER, (curPlayer) => {
+eventManager.subscribe(EVENTS.CURRENT_PLAYER, (curPlayer) => {
   if (curPlayer) {
     currentPlayer = curPlayer
     console.debug(`ℹ️ [ INDEX ] evento ${EVENTS.NEXT_PLAYER}: ', ${curPlayer}`)
-    document.getElementById('player-vez').innerText = currentPlayer
-    eventManager.publish('delete-event', 'current-player')
+    document.getElementById('player-vez').innerText = curPlayer
+    // eventManager.publish('delete-event', 'current-player')
   }
 })
 

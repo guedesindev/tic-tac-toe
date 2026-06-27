@@ -15,7 +15,6 @@ eventManager.subscribe(EVENTS.USER, (data) => {
 
 //evento disparado por firebase.js
 eventManager.subscribe(EVENTS.PLAYER_JOINED, (data) => {
-  console.log(`[🟢 CLIENT 18] ${EVENTS.PLAYER_JOINED} ${data}`)
   //evento enviado para o index atualizar o front-end e direcionar os players ao tabuleiro
   if (data) {
     let players = data['players']
@@ -23,21 +22,12 @@ eventManager.subscribe(EVENTS.PLAYER_JOINED, (data) => {
       if (players[id].name === player.name) {
         player.id = players[id].id
         player.value = players[id].value
-        console.log('Player atual: ', player)
       }
     }
-
-    eventManager.publish(EVENTS.DELETE, EVENTS.PLAYER_JOINED)
-    console.clear()
     eventManager.publish(EVENTS.START_GAME, data)
   }
 
   // console.clear()
-})
-
-eventManager.subscribe(EVENTS.CLICKED, (data) => {
-  //enviar jogada para o servidor
-  eventManager.publish('btn-clicked', data)
 })
 
 eventManager.subscribe(EVENTS.CURRENT_PLAYER, (data) => {
@@ -46,9 +36,9 @@ eventManager.subscribe(EVENTS.CURRENT_PLAYER, (data) => {
   }
 })
 
-eventManager.subscribe(EVENTS.PLAY, (dados) => {
-  eventManager.publish('jogada', dados)
-})
+// eventManager.subscribe(EVENTS.PLAY, (dados) => {
+//   eventManager.publish('jogada', dados)
+// })
 
 eventManager.subscribe(EVENTS.DEBUG_INFORMATION, (data) => {
   eventManager.publish(EVENTS.DELETE, EVENTS.DEBUG)
@@ -77,8 +67,8 @@ eventManager.subscribe(EVENTS.WINNER_NOTIFY, (data) => {
     data.win === player.value
       ? 'sucesso'
       : data.win === 'empate'
-      ? 'alert'
-      : 'erro'
+        ? 'alert'
+        : 'erro'
 
   let cor = data.win === player.value ? '#FFF' : '#444'
   let eventdata = {

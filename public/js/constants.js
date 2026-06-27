@@ -23,6 +23,7 @@ const EVENTS = {
   PLAYER_JOINED: 'jogador-entrou',
   START_GAME: 'iniciar-partida',
   TURN_PLAYER: 'proximo',
+  TURNO: 'jogador-vez',
   USER: 'usuario',
   USER_AUTH: 'autenticarcao',
   USER_NAME: 'nome_usuario',

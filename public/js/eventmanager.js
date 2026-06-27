@@ -14,7 +14,6 @@ const eventManager = {
     }
 
     this.events[eventName].push(fn)
-    //console.log(`[✅ EventManager] Evento ${eventName} registrado com sucesso!` )
   },
   unsubscribe(eventName, fn) {
     if (this.events[eventName]) {
@@ -32,7 +31,6 @@ const eventManager = {
       this.events[eventName].forEach((fn) => {
         fn(data)
       })
-      console.log(`[📢 EventManager] Evento publicado: ${eventName}`, data)
     } else {
       console.log(
         `[⚠️ EventManager] ${eventName} não está registrado. Favor verificar o nome do evento`

@@ -32,7 +32,7 @@ eventManager.subscribe(EVENTS.USER_AUTH, async (nome) => {
   if (nome) {
     player.name = nome
     try {
-      await signInAnonymously(auth).then(async () => {})
+      await signInAnonymously(auth).then(async () => { })
 
       let usuario = await getAuthenticatedUser()
       if (usuario) {
@@ -42,7 +42,7 @@ eventManager.subscribe(EVENTS.USER_AUTH, async (nome) => {
     } catch (error) {
       var errorCode = error.code
       var errorMessage = error.message
-      console.log(errorCode, errorMessage)
+      console.error(errorCode, errorMessage)
     }
   }
 })
@@ -52,6 +52,7 @@ eventManager.subscribe(EVENTS.PLAYER_CONFIG, async (data) => {
     player.uid = data.uid
     player.id = gerateId()
     player.name = data.displayName
+
     await handleJoinGame(gamesRef, player)
   }
 })
@@ -63,10 +64,8 @@ eventManager.subscribe(EVENTS.DELETE, (nomeEvento) => {
 eventManager.subscribe(EVENTS.CLICKED, async (data) => {
   try {
     currentMatch = await findGameId(player.id)
-    console.log(currentMatch)
     if (currentMatch) {
       const currentMatchRef = child(gamesRef, currentMatch)
-      // const currentMatchRef = child(gamesRef + '/game', currentMatch) //somente para testes
 
       const moveRef = child(currentMatchRef, 'moves')
       let moveData = { btnId: data.btnId, value: data.value }
@@ -82,24 +81,8 @@ eventManager.subscribe(EVENTS.CLICKED, async (data) => {
 
 eventManager.subscribe(EVENTS.TURN_PLAYER, async (currentPlayer) => {
   let matchRef = child(gamesRef, currentMatch)
-  // let matchRef = child(child(gamesRef, 'game'), currentMatch) //somente para testes
-
   await update(matchRef, { currentPlayer: currentPlayer })
-  const snapShot = await get(matchRef)
-  if (snapShot.exists()) {
-    let vez = snapShot.val().currentPlayer
-    if (vez) {
-      let eventData = {
-        type: EVENTS.CURRENT_PLAYER,
-        details: {
-          msg: 'player da vez',
-          resultado: 'sucesso',
-          value: vez
-        }
-      }
-      persistirEventos(matchRef, eventData)
-    }
-  }
+
 })
 
 eventManager.subscribe(EVENTS.WINNER_DETECTED, async (winner) => {
@@ -141,7 +124,6 @@ async function handleJoinGame(gamesRef, player) {
     try {
       let matchAvaliableId = findAvaliableGame(gamesList)
       currentMatch = matchAvaliableId
-      console.log(`[🛠️ firebase 145] - ${currentMatch}`)
       if (matchAvaliableId) {
         //verificar value do player conectado à partida
         // const matchRef = child(gamesRef, 'game/' + matchAvaliableId) //Somente para testes
@@ -149,7 +131,6 @@ async function handleJoinGame(gamesRef, player) {
 
         currentMatch = matchAvaliableId
         await putPlayer(matchRef, player)
-        // console.log()
       } else {
         console.error('🌐 Não há partidas disponíveis. Criano uma nova...')
         await startNewGame(gamesRef, player)
@@ -159,14 +140,15 @@ async function handleJoinGame(gamesRef, player) {
       throw error
     }
   } else {
-    console.error('⛔ ão há partidas a listar. Criano uma nova...')
+    console.error('⛔ Não há partidas a listar. Criano uma nova...')
     try {
       await startNewGame(gamesRef, player)
     } catch (error) {
       console.error('⛔ Erro ao criar nova partida: ', error.message)
     }
-    // console.log()
   }
+  observarMovimentos(child(gamesRef, currentMatch))
+  observarJogadores(child(gamesRef, currentMatch))
 }
 
 /**
@@ -209,21 +191,9 @@ async function startNewGame(gamesRef, player) {
       uid: player.uid,
       value: 'X'
     })
-    // console.log('✅[firebase] Jogador criado com sucess!')
   } catch (error) {
     console.error('⛔[ firebase] Erro ao iniciar nova partida: ', error.message)
     throw error
-  }
-
-  if (newGameRef) {
-    let eventData = {
-      type: EVENTS.DEBUG_INFORMATION,
-      details: {
-        msg: `novo jogo criado: ${currentMatch}`,
-        data: currentMatch
-      }
-    }
-    await persistirEventos(newGameRef, eventData)
   }
 }
 
@@ -237,17 +207,15 @@ async function putPlayer(matchRef, player) {
       const gamers = snapshot.val()
       if (gamers) {
         const eventData = {
-          type: EVENTS.PLAYER_JOINED,
-          details: {
-            resultado: 'sucesso',
-            currentPlayer: gamers.currentPlayer,
-            players: {
-              player1: gamers.players['player1'],
-              player2: gamers.players['player2']
-            }
+          currentPlayer: gamers.currentPlayer,
+          players: {
+            player1: gamers.players['player1'],
+            player2: gamers.players['player2']
           }
         }
-        await persistirEventos(matchRef, eventData)
+
+        // await persistirEventos(matchRef, eventData)
+        eventManager.publish(EVENTS.PLAYER_JOINED, eventData)
       }
     }
   } catch (error) {
@@ -300,7 +268,6 @@ async function joinGame(matchRef, player) {
 
 function gerateId() {
   let id = Math.floor(Math.random() * 1000000000000000).toString(36)
-  // console.log(`✅ [ firebase ] id gerado para o player: ', ${id}`)
   return id
 }
 
@@ -310,17 +277,14 @@ function gerateId() {
  * @returns {Object} matches
  */
 async function getMatches(ref) {
-  //debug only let refPath = child(gamesRef, 'game') //somente para testes
-  //Debug only console.log(`🛠️[firebase (300)] ${ref.key}`)
   try {
     const snapshot = await get(ref)
-    //debug only console.log(`🛠️[firebase (303)] ${snapshot}`)
     const matches = snapshot.val()
     if (matches) {
       return matches
     }
   } catch (error) {
-    console.log(
+    console.error(
       '⛔ [firebase] getMatches: erro o obter partidas -',
       error.message
     )
@@ -401,41 +365,25 @@ async function atualizarMovimento(ref, moveData) {
   await update(newMove, moveData)
 }
 
-let actionExecuted = false
-onChildChanged(gamesRef, async (snapshot) => {
-  if (snapshot.exists() && !actionExecuted) {
-    if (currentMatch) {
-      let dadosAlterados = snapshot.val()
-      let matchRef = child(gamesRef, currentMatch)
-      // let matchRef = child(child(gamesRef, '/game'), currentMatch) //somente para testes
-      //enviar evento dos dados das jogadas
-      let movesRef = child(matchRef, 'moves')
+async function observarMovimentos(matchRef) {
+  const movesRef = await child(matchRef, 'moves')
 
-      onChildAdded(movesRef, async (snapshot) => {
-        let dados = {}
-        let eventData = {}
-        if (snapshot.exists()) {
-          dados = await snapshot.val()
-          if (dados) {
-            eventData = {
-              type: EVENTS.PLAY,
-              details: {
-                msg: 'nova jogada realizada',
-                resultado: 'sucesso',
-                data: dados
-              }
-            }
-          }
-        }
-        // console.log()
-        await persistirEventos(matchRef, eventData)
-        actionExecuted = true
-      })
-    } else {
-      console.error('⛔ [firebase] Não há partidas disponíveis ainda...')
+  onChildAdded(movesRef, (snapshot) => {
+    const moves = snapshot.val()
+
+    eventManager.publish(EVENTS.PLAY, { data: moves })
+  })
+}
+
+async function observarJogadores(matchRef) {
+
+  onValue(child(matchRef, 'isFull'), async snapshot => {
+    if (snapshot.val()) {
+      const jogadores = await getMatchPlayers(matchRef)
+      eventManager.publish(EVENTS.PLAYER_JOINED, { players: jogadores, currentPlayer: 'X' })
     }
-  }
-})
+  })
+}
 
 /**
  * Métodos para tratar de eventos
@@ -443,39 +391,39 @@ onChildChanged(gamesRef, async (snapshot) => {
  * @param {object} eventData
  */
 //função para enviar eventos para o firebase
-async function persistirEventos(matchRef, eventData) {
-  const eventosRef = child(matchRef, 'eventos')
-  var thisEvent = child(eventosRef, eventData.type)
+// async function persistirEventos(matchRef, eventData) {
+//   const eventosRef = child(matchRef, 'eventos')
+//   var thisEvent = child(eventosRef, eventData.type)
 
-  const dataToSend = eventData
-  try {
-    await set(thisEvent, dataToSend)
-    eventsObserver(gamesRef, currentMatch)
-  } catch (error) {
-    console.error(
-      '⛔ [firebase] Erro ao salvar evento: ',
-      eventData.type,
-      ' -> ',
-      error.message
-    )
-  }
-}
+//   const dataToSend = eventData
+//   try {
+//     await set(thisEvent, dataToSend)
+//     eventsObserver(gamesRef, currentMatch)
+//   } catch (error) {
+//     console.error(
+//       '⛔ [firebase] Erro ao salvar evento: ',
+//       eventData.type,
+//       ' -> ',
+//       error.message
+//     )
+//   }
+// }
 
-async function eventsObserver(gamesRef, matchId) {
-  const gameRef = await child(gamesRef, matchId)
-  const eventRef = await child(gameRef, 'eventos')
+// async function eventsObserver(gamesRef, matchId) {
+//   const gameRef = await child(gamesRef, matchId)
+//   const eventRef = await child(gameRef, 'eventos')
 
-  onChildAdded(eventRef, async (snapshot) => {
-    const evento = await snapshot.val()
-    if (evento) eventManager.publish(evento.type, evento.details)
-  })
-}
+//   onChildAdded(eventRef, async (snapshot) => {
+//     const evento = await snapshot.val()
+//     if (evento) eventManager.publish(evento.type, evento.details)
+//   })
+// }
 
-async function deletarEventos(data) {
-  const gameRef = ref(db, `games/game/${currentMatch}`)
+// async function deletarEventos(data) {
+//   const gameRef = ref(db, `games/game/${currentMatch}`)
 
-  const eventRef = child(gameRef, 'eventos')
-  const eventToDel = child(eventRef, data)
+//   const eventRef = child(gameRef, 'eventos')
+//   const eventToDel = child(eventRef, data)
 
-  await remove(eventToDel)
-}
+//   await remove(eventToDel)
+// }
