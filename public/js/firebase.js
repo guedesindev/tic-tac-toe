@@ -52,13 +52,10 @@ eventManager.subscribe(EVENTS.PLAYER_CONFIG, async (data) => {
     player.uid = data.uid
     player.id = gerateId()
     player.name = data.displayName
+    player.points = 0
 
     await handleJoinGame(gamesRef, player)
   }
-})
-
-eventManager.subscribe(EVENTS.DELETE, (nomeEvento) => {
-  deletarEventos(nomeEvento)
 })
 
 eventManager.subscribe(EVENTS.CLICKED, async (data) => {
@@ -86,15 +83,13 @@ eventManager.subscribe(EVENTS.TURN_PLAYER, async (currentPlayer) => {
 })
 
 eventManager.subscribe(EVENTS.WINNER_DETECTED, async (winner) => {
-  const matchRef = child(gamesRef, currentMatch)
+  const matchRef = child(child(gamesRef, currentMatch), 'winner')
 
-  let eventData = {
-    type: EVENTS.WINNER_NOTIFY,
-    details: {
-      win: winner
-    }
+  await set(matchRef, winner)
+
+  if (winner !== 'emptate') {
+    atualizarPontuacao(child(gamesRef, currentMatch), winner, 1)
   }
-  await persistirEventos(matchRef, eventData)
 })
 
 async function getAuthenticatedUser() {
@@ -149,6 +144,7 @@ async function handleJoinGame(gamesRef, player) {
   }
   observarMovimentos(child(gamesRef, currentMatch))
   observarJogadores(child(gamesRef, currentMatch))
+
 }
 
 /**
@@ -189,12 +185,14 @@ async function startNewGame(gamesRef, player) {
       id: player.id,
       name: player.name,
       uid: player.uid,
-      value: 'X'
+      value: 'X',
+      points: player.points
     })
   } catch (error) {
     console.error('⛔[ firebase] Erro ao iniciar nova partida: ', error.message)
     throw error
   }
+  observarFimJogo(child(gamesRef, currentMatch))
 }
 
 async function putPlayer(matchRef, player) {
@@ -358,6 +356,15 @@ async function findGameId(playerId) {
   return null
 }
 
+async function atualizarPontuacao(matchRef, winner, pontuacao) {
+  const players = await getMatchPlayers(matchRef)
+  console.log(winner)
+  console.log(players)
+  let player = Object.values(players).find(p => p.value === winner)
+  player.points += 1
+  await update(child(matchRef, 'players'), players)
+}
+
 /**Métodos para andamento da partida */
 //Persistir atualizações no banco de dados
 async function atualizarMovimento(ref, moveData) {
@@ -381,6 +388,22 @@ async function observarJogadores(matchRef) {
     if (snapshot.val()) {
       const jogadores = await getMatchPlayers(matchRef)
       eventManager.publish(EVENTS.PLAYER_JOINED, { players: jogadores, currentPlayer: 'X' })
+    }
+  })
+
+  onValue(child(matchRef, 'players'), async snapshot => {
+    if (snapshot.val()) {
+      console.log(snapshot.val())
+      const jogadores = snapshot.val()
+      eventManager.publish('atualizar-pontuacao', jogadores)
+    }
+  })
+}
+
+async function observarFimJogo(matchRef) {
+  onValue(child(matchRef, 'winner'), async snapshot => {
+    if (snapshot.val()) {
+      eventManager.publish(EVENTS.WINNER_NOTIFY, snapshot.val())
     }
   })
 }

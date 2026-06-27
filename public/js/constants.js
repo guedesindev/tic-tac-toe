@@ -14,6 +14,7 @@ const EVENTS = {
   DEBUG: 'detalhe-debug', //informação-debug
   DEBUG_INFORMATION: 'informacoes-debug',
   DELETE: 'delete-evento',
+  END: 'fim-de-partida',
   GAME_CREATED: 'partida-criada',
   INFORMATION: 'informacao',
   NEXT_PLAYER: 'novo-jogador-atual',

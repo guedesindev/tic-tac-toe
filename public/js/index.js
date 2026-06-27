@@ -80,11 +80,23 @@ eventManager.subscribe(EVENTS.START_GAME, (data) => {
   container.style.display = 'none'
   tabuleiro.style.display = 'block'
 
-  document.getElementById('user').innerText = user.name
-  document.getElementById('opponent').innerText = opponent.name
-  document.getElementById('opponentValue').innerText = opponent.value
+  document.getElementById('user').textContent = user.name
+  document.getElementById('opponent').textContent = opponent.name
+  document.getElementById('opponentValue').textContent = opponent.value
 
-  document.getElementById('player-vez').innerText = currentPlayer
+  document.getElementById('player-vez').textContent = currentPlayer
+})
+
+eventManager.subscribe(EVENTS.END, data => {
+  disableBoard()
+  if (data === currentPlayer) {
+    showNotifications(`Você ganhou o jogo 🍾`, 'sucesso')
+  } else if (data === 'empate') {
+    showNotifications('Empatou', '#e39236', "#2f175b")
+  } else {
+    showNotifications(`Que pena você perdeu ☹️`, 'erro')
+  }
+  eventManager.publish(EVENTS.WINNER, data)
 })
 
 /**
@@ -109,6 +121,7 @@ function renderTabuleiro() {
 renderTabuleiro()
 
 eventManager.subscribe(EVENTS.NOTIFICATIONS, (data) => {
+  disableBoard()
   let background
   if (data.resultado === 'erro') {
     background = '#DE633E'
@@ -133,6 +146,7 @@ eventManager.subscribe(EVENTS.PLAY, (data) => {
 
     if (player.value !== dados.value) {
       updateBoardUI(dados.btnId, dados.value)
+      realizarJogada(dados.btnId, dados.value)
       currentPlayer = toogleTurnPlayer(currentPlayer)
       eventManager.publish(EVENTS.TURN_PLAYER, currentPlayer)
     }
@@ -143,8 +157,22 @@ eventManager.subscribe(EVENTS.CURRENT_PLAYER, (curPlayer) => {
   if (curPlayer) {
     currentPlayer = curPlayer
     console.debug(`ℹ️ [ INDEX ] evento ${EVENTS.NEXT_PLAYER}: ', ${curPlayer}`)
-    document.getElementById('player-vez').innerText = curPlayer
+    document.getElementById('player-vez').textContent = curPlayer
     // eventManager.publish('delete-event', 'current-player')
+  }
+})
+
+eventManager.subscribe('atualizar-pontuacao', jogadores => {
+  const placarP1 = document.getElementById('p1-pontos')
+  const placarP2 = document.getElementById('p2-pontos')
+
+  if (jogadores.player1 && jogadores.player2) {
+    placarP1.innerText = jogadores.player1.name + ": " + jogadores.player1.points
+    placarP2.innerText = jogadores.player2.name + ": " + jogadores.player2.points
+  } else {
+    console.log('GameAtualizado: ', gameAtualizado)
+    placarP1.innerText = `${gameAtualizado.player1.name}: ${gameAtualizado.player1.points}`
+    placarP2.innerText = `${gameAtualizado.player2.name}: ${gameAtualizado.player2.points}`
   }
 })
 
@@ -183,15 +211,11 @@ function enableBoard() {
 }
 
 function handleButtonClick(cellId) {
-  const winner = game.checkWinner()
+  const result = game.checkEndGame()
 
   let clickData = {}
 
-  if (winner) {
-    disableBoard()
-    showNotifications(`${winner} ganhou o jogo!`, 'sucesso')
-    return
-  }
+
 
   if (isCellOcupied(cellId)) {
     showNotifications('⛔ Esta casa já está ocupada', '#DE633E', '#FFF')

@@ -1,4 +1,5 @@
 import eventManager from './eventmanager.js'
+import { EVENTS } from './constants.js'
 
 class TicTacToe {
   constructor() {
@@ -13,11 +14,11 @@ class TicTacToe {
   makeMove(data) {
     this.currentPlayer = data.curPlayer
     this.board[data.x][data.y] = this.currentPlayer
-    let winner = this.checkWinner() ? this.checkWinner() : null
-    if (winner) eventManager.publish('vencedor', winner)
+    let result = this.checkEndGame() || null
+    if (result) eventManager.publish(EVENTS.END, result)
   }
 
-  checkWinner() {
+  checkEndGame() {
     //verificação linhas
     for (let i = 0; i < 3; i++) {
       if (
@@ -58,7 +59,7 @@ class TicTacToe {
 
     //verifica empate
     if (this.board.flat().every((cell) => cell !== '')) {
-      return 'Empate'
+      return 'empate'
     }
     //Se não houver vencedor ou empate, retorna null (partida continua)
     return null

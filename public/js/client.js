@@ -36,41 +36,41 @@ eventManager.subscribe(EVENTS.CURRENT_PLAYER, (data) => {
   }
 })
 
-// eventManager.subscribe(EVENTS.PLAY, (dados) => {
-//   eventManager.publish('jogada', dados)
+// eventManager.subscribe(EVENTS.DEBUG_INFORMATION, (data) => {
+//   eventManager.publish(EVENTS.DELETE, EVENTS.DEBUG)
 // })
 
-eventManager.subscribe(EVENTS.DEBUG_INFORMATION, (data) => {
-  eventManager.publish(EVENTS.DELETE, EVENTS.DEBUG)
-})
-
 eventManager.subscribe(EVENTS.INFORMATION, (data) => {
-  eventManager.publish('delete-event', 'informação')
+  // eventManager.publish('delete-event', 'informação')
 })
 
-let isNotified = false
-eventManager.subscribe(EVENTS.WINNER, (winner) => {
-  if (winner && !isNotified) {
-    eventManager.publish('vencedor-detectado', winner)
 
-    isNotified = true
+eventManager.subscribe(EVENTS.WINNER, (winner) => {
+  if (winner) {
+    eventManager.publish(EVENTS.WINNER_DETECTED, winner)
   }
 })
 
 eventManager.subscribe(EVENTS.WINNER_NOTIFY, (data) => {
   let resultado = ''
-  let msg =
-    data.win === player.value
-      ? 'Parabéns você venceu!'
-      : 'Que pena você perdeu!'
+  let msg = ''
+
+  if (data === player.value) {
+    msg = 'Parabéns você venceu 🍾'
+  } else if (data === 'empate') {
+    msg = 'Opa o jogo empatou 🤷🏾'
+  } else {
+    msg = 'Que pena você perdeu ☹️'
+  }
+
   resultado =
-    data.win === player.value
+    data === player.value
       ? 'sucesso'
-      : data.win === 'empate'
+      : data === 'empate'
         ? 'alert'
         : 'erro'
 
-  let cor = data.win === player.value ? '#FFF' : '#444'
+  let cor = data === player.value ? '#FFF' : '#444'
   let eventdata = {
     type: EVENTS.NOTIFICATIONS,
     details: {
